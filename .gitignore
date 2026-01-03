@@ -43,3 +43,22 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# iOS/CocoaPods related
+**/ios/Pods/
+**/ios/Podfile.lock
+**/ios/.symlinks/
+**/ios/Flutter/Debug.xcconfig
+**/ios/Flutter/Profile.xcconfig
+**/ios/Flutter/Release.xcconfig
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/Flutter/ephemeral/
+
+# macOS/CocoaPods related
+**/macos/Pods/
+**/macos/Podfile.lock
+**/macos/.symlinks/
+**/macos/Flutter/Flutter-Debug.xcconfig
+**/macos/Flutter/Flutter-Release.xcconfig
+**/macos/Flutter/ephemeral/

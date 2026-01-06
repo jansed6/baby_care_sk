@@ -38,6 +38,9 @@ dependencies:
   # Lokálne ukladanie dát
   shared_preferences: ^2.2.2
   
+  # Generovanie unikátnych ID
+  uuid: ^4.5.1
+  
   # Formátovanie dátumov a časov
   intl: ^0.19.0
 

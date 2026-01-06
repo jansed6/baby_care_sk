@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/sleep_record.dart';
 
@@ -14,6 +15,10 @@ class SleepService {
 
     final List<dynamic> decoded = jsonDecode(recordsJson);
     return decoded.map((json) => SleepRecord.fromJson(json)).toList();
+  }
+
+  List<SleepRecord> getAllRecords() {
+    return getRecords();
   }
 
   List<SleepRecord> getTodayRecords() {
@@ -38,6 +43,22 @@ class SleepService {
           record.isActive && record.startTime.isBefore(tomorrow);
 
       return startedToday || endedToday || isActiveFromBefore;
+    }).toList();
+  }
+
+  List<SleepRecord> getRecentRecords({int daysAgo = 7}) {
+    final records = getRecords();
+    final now = DateTime.now();
+    final startDate = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).subtract(Duration(days: daysAgo));
+
+    return records.where((record) {
+      // Zobraz záznam ak začal v posledných N dňoch
+      // alebo stále prebieha
+      return record.startTime.isAfter(startDate) || record.isActive;
     }).toList();
   }
 
@@ -93,5 +114,52 @@ class SleepService {
 
   int getSleepCountToday() {
     return getTodayRecords().where((r) => !r.isActive).length;
+  }
+
+  Future<void> generateTestData() async {
+    final random = Random();
+    final now = DateTime.now();
+    final testRecords = <SleepRecord>[];
+    int idCounter = 0;
+
+    // Generuj dáta za posledných 365 dní
+    for (int dayOffset = 0; dayOffset < 365; dayOffset++) {
+      final date = now.subtract(Duration(days: dayOffset));
+
+      // Náhodný počet spánkov za deň (1-4)
+      final sleepsPerDay = 1 + random.nextInt(4);
+
+      for (int i = 0; i < sleepsPerDay; i++) {
+        // Náhodný čas začiatku spánku
+        final startHour = random.nextInt(24);
+        final startMinute = random.nextInt(60);
+
+        final sleepStartTime = DateTime(
+          date.year,
+          date.month,
+          date.day,
+          startHour,
+          startMinute,
+        );
+
+        // Náhodná dĺžka spánku (30 min až 4 hodiny)
+        final durationMinutes = 30 + random.nextInt(210);
+        final sleepEndTime = sleepStartTime.add(
+          Duration(minutes: durationMinutes),
+        );
+
+        testRecords.add(
+          SleepRecord(
+            id: 'test_${idCounter++}',
+            startTime: sleepStartTime,
+            endTime: sleepEndTime,
+          ),
+        );
+      }
+    }
+
+    // Ulož všetky testovacie záznamy
+    final jsonList = testRecords.map((r) => r.toJson()).toList();
+    await _prefs.setString(_storageKey, jsonEncode(jsonList));
   }
 }

@@ -16,10 +16,16 @@ class _SleepScreenState extends State<SleepScreen> {
   bool _isLoading = true;
   SleepRecord? _activeRecord;
   List<SleepRecord> _todayRecords = [];
+  List<SleepRecord> _recentRecords = [];
+  late Stream<int> _clockStream;
 
   @override
   void initState() {
     super.initState();
+    _clockStream = Stream.periodic(
+      const Duration(seconds: 1),
+      (count) => count,
+    ).asBroadcastStream();
     _initService();
   }
 
@@ -33,6 +39,7 @@ class _SleepScreenState extends State<SleepScreen> {
     setState(() {
       _activeRecord = _sleepService.getActiveRecord();
       _todayRecords = _sleepService.getTodayRecords();
+      _recentRecords = _sleepService.getRecentRecords(daysAgo: 7);
       _isLoading = false;
     });
   }
@@ -58,7 +65,7 @@ class _SleepScreenState extends State<SleepScreen> {
     DateTime startTime = DateTime.now().subtract(const Duration(hours: 1));
     DateTime endTime = DateTime.now();
     final now = DateTime.now();
-    final oneDayAgo = now.subtract(const Duration(days: 1));
+    final minDayAgo = now.subtract(const Duration(days: 7));
 
     await showCupertinoDialog(
       context: context,
@@ -107,7 +114,7 @@ class _SleepScreenState extends State<SleepScreen> {
                                     child: CupertinoDatePicker(
                                       mode: CupertinoDatePickerMode.dateAndTime,
                                       initialDateTime: startTime,
-                                      minimumDate: oneDayAgo,
+                                      minimumDate: minDayAgo,
                                       maximumDate: now,
                                       use24hFormat: true,
                                       onDateTimeChanged: (DateTime newTime) {
@@ -167,7 +174,7 @@ class _SleepScreenState extends State<SleepScreen> {
                                     child: CupertinoDatePicker(
                                       mode: CupertinoDatePickerMode.dateAndTime,
                                       initialDateTime: endTime,
-                                      minimumDate: oneDayAgo,
+                                      minimumDate: minDayAgo,
                                       maximumDate: now,
                                       use24hFormat: true,
                                       onDateTimeChanged: (DateTime newTime) {
@@ -295,8 +302,8 @@ class _SleepScreenState extends State<SleepScreen> {
             const SizedBox(height: 20),
             // Aktuálny čas
             Center(
-              child: StreamBuilder(
-                stream: Stream.periodic(const Duration(seconds: 1)),
+              child: StreamBuilder<int>(
+                stream: _clockStream,
                 builder: (context, snapshot) {
                   return Text(
                     _getCurrentTime(),
@@ -434,7 +441,7 @@ class _SleepScreenState extends State<SleepScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'História:',
+          'História (7 dní):',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -442,7 +449,7 @@ class _SleepScreenState extends State<SleepScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        if (_todayRecords.isEmpty)
+        if (_recentRecords.isEmpty)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 24),
             child: Center(
@@ -456,7 +463,7 @@ class _SleepScreenState extends State<SleepScreen> {
             ),
           )
         else
-          ..._todayRecords.reversed
+          ..._recentRecords.reversed
               .map((record) => _buildHistoryItem(record))
               .toList(),
       ],
@@ -497,7 +504,7 @@ class _SleepScreenState extends State<SleepScreen> {
           ),
           CupertinoButton(
             padding: EdgeInsets.zero,
-            minSize: 0,
+            minimumSize: Size.zero,
             onPressed: () => _deleteRecord(record.id),
             child: const Icon(
               CupertinoIcons.delete,

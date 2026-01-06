@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import '../components/activity_card.dart';
 import '../components/bottom_navigation_bar.dart';
+import '../components/bottle_feeding_card.dart';
 import '../components/sleep_card.dart';
 import '../components/vitamin_d_card.dart';
 import '../services/breastfeeding_service.dart';
@@ -68,12 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
               const SleepCard(),
               const SizedBox(height: 16),
               // Karta fľaša
-              const ActivityCard(
-                title: 'Fľaša',
-                value: '2x',
-                icon: CupertinoIcons.drop_fill,
-                iconColor: CupertinoColors.systemBlue,
-              ),
+              const BottleFeedingCard(),
               const SizedBox(height: 16),
               // Karta plienky
               const ActivityCard(

@@ -1,7 +1,8 @@
 import 'package:flutter/cupertino.dart';
+import '../screens/statistics_screen.dart';
 
-/// Wrapper pre CupertinoTabScaffold s jednotným bottom navigation barom
-/// pre všetky obrazovky aplikácie
+/// Wrapper pre CupertinoTabScaffold s jednotnym bottom navigation barom
+/// pre vsetky obrazovky aplikacie
 class BottomNavigationBar extends StatefulWidget {
   final Widget child;
   final int currentIndex;
@@ -30,28 +31,24 @@ class _BottomNavigationBarState extends State<BottomNavigationBar> {
     return CupertinoTabScaffold(
       tabBar: CupertinoTabBar(
         currentIndex: _selectedTab,
+        height: 60,
+        iconSize: 26,
+        activeColor: CupertinoColors.activeBlue,
+        inactiveColor: CupertinoColors.systemGrey,
+        backgroundColor: CupertinoColors.systemBackground,
+        border: const Border(
+          top: BorderSide(color: CupertinoColors.separator, width: 0.5),
+        ),
         onTap: (index) {
           setState(() {
             _selectedTab = index;
           });
         },
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.home),
-            label: 'Domov',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.plus_circle),
-            label: 'Pridať',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.chart_bar),
-            label: 'Štatistiky',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.settings),
-            label: 'Nastavenia',
-          ),
+          BottomNavigationBarItem(icon: Icon(CupertinoIcons.house_fill)),
+          BottomNavigationBarItem(icon: Icon(CupertinoIcons.plus_circle_fill)),
+          BottomNavigationBarItem(icon: Icon(CupertinoIcons.chart_bar_fill)),
+          BottomNavigationBarItem(icon: Icon(CupertinoIcons.gear_alt_fill)),
         ],
       ),
       tabBuilder: (context, index) {
@@ -59,14 +56,18 @@ class _BottomNavigationBarState extends State<BottomNavigationBar> {
         if (index == 0) {
           return widget.child;
         }
-        // Ostatné sekcie - placeholder
+        // Statistiky
+        if (index == 2) {
+          return const StatisticsScreen();
+        }
+        // Ostatne sekcie - placeholder
         return CupertinoPageScaffold(
           navigationBar: CupertinoNavigationBar(
             middle: Text(_getTabTitle(index)),
           ),
           child: const Center(
             child: Text(
-              'Táto sekcia bude dostupná neskôr',
+              'Tato sekcia bude dostupna neskor',
               style: TextStyle(fontSize: 16, color: CupertinoColors.systemGrey),
             ),
           ),
@@ -80,9 +81,9 @@ class _BottomNavigationBarState extends State<BottomNavigationBar> {
       case 0:
         return 'Domov';
       case 1:
-        return 'Pridať aktivitu';
+        return 'Pridat aktivitu';
       case 2:
-        return 'Štatistiky';
+        return 'Statistiky';
       case 3:
         return 'Nastavenia';
       default:

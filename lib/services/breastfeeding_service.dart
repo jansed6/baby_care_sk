@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/breastfeeding_record.dart';
 
@@ -23,9 +24,7 @@ class BreastfeedingService {
     }
 
     final List<dynamic> jsonList = jsonDecode(jsonString);
-    return jsonList
-        .map((json) => BreastfeedingRecord.fromJson(json))
-        .toList();
+    return jsonList.map((json) => BreastfeedingRecord.fromJson(json)).toList();
   }
 
   Future<List<BreastfeedingRecord>> getTodayRecords() async {
@@ -57,5 +56,48 @@ class BreastfeedingService {
   Future<void> clearAllRecords() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_storageKey);
+  }
+
+  Future<void> generateTestData() async {
+    final random = Random();
+    final now = DateTime.now();
+    final testRecords = <BreastfeedingRecord>[];
+    final sides = [
+      BreastfeedingSide.left,
+      BreastfeedingSide.right,
+      BreastfeedingSide.both,
+    ];
+
+    // Generuj dáta za posledných 365 dní
+    for (int dayOffset = 0; dayOffset < 365; dayOffset++) {
+      final date = now.subtract(Duration(days: dayOffset));
+
+      // Náhodný počet dojčení za deň (2-8)
+      final feedingsPerDay = 2 + random.nextInt(7);
+
+      for (int i = 0; i < feedingsPerDay; i++) {
+        // Náhodný čas v priebehu dňa
+        final hour = random.nextInt(24);
+        final minute = random.nextInt(60);
+
+        final feedingTime = DateTime(
+          date.year,
+          date.month,
+          date.day,
+          hour,
+          minute,
+        );
+
+        // Náhodná strana
+        final side = sides[random.nextInt(sides.length)];
+
+        testRecords.add(BreastfeedingRecord(time: feedingTime, side: side));
+      }
+    }
+
+    // Ulož všetky testovacie záznamy
+    final prefs = await SharedPreferences.getInstance();
+    final jsonList = testRecords.map((r) => r.toJson()).toList();
+    await prefs.setString(_storageKey, jsonEncode(jsonList));
   }
 }

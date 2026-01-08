@@ -1,4 +1,6 @@
 import 'package:flutter/cupertino.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 
 /// Widget pre zobrazenie karty s aktivitou (dojčenie, spánok)
 class ActivityCard extends StatelessWidget {
@@ -7,6 +9,7 @@ class ActivityCard extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
   final VoidCallback? onTap;
+  final bool showChevron;
 
   const ActivityCard({
     super.key,
@@ -15,16 +18,19 @@ class ActivityCard extends StatelessWidget {
     required this.icon,
     required this.iconColor,
     this.onTap,
+    this.showChevron = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: CupertinoColors.white,
+          color: themeProvider.getCardColor(context),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -35,15 +41,19 @@ class ActivityCard extends StatelessWidget {
           ],
         ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // Ikonka
             Container(
-              padding: const EdgeInsets.all(12),
+              width: 48,
+              height: 48,
               decoration: BoxDecoration(
                 color: iconColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, size: 32, color: iconColor),
+              child: Center(
+                child: Icon(icon, size: 28, color: iconColor),
+              ),
             ),
             const SizedBox(width: 16),
             // Text
@@ -54,23 +64,28 @@ class ActivityCard extends StatelessWidget {
                   Text(
                     title,
                     style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
                       color: CupertinoColors.systemGrey,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     value,
-                    style: const TextStyle(
-                      fontSize: 24,
+                    style: TextStyle(
+                      fontSize: 17,
                       fontWeight: FontWeight.w600,
-                      color: CupertinoColors.black,
+                      color: themeProvider.getTextColor(context),
                     ),
                   ),
                 ],
               ),
             ),
+            if (showChevron)
+              const Icon(
+                CupertinoIcons.chevron_right,
+                color: CupertinoColors.systemGrey3,
+              ),
           ],
         ),
       ),

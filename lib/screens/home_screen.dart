@@ -1,7 +1,10 @@
 import 'package:flutter/cupertino.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 import '../components/activity_card.dart';
 import '../components/bottom_navigation_bar.dart';
 import '../components/bottle_feeding_card.dart';
+import '../components/diaper_card.dart';
 import '../components/sleep_card.dart';
 import '../components/vitamin_d_card.dart';
 import '../services/breastfeeding_service.dart';
@@ -34,13 +37,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return BottomNavigationBar(
       currentIndex: 0,
       child: CupertinoPageScaffold(
-        backgroundColor: CupertinoColors.systemGroupedBackground,
-        navigationBar: const CupertinoNavigationBar(
-          middle: Text('BabyCare SK'),
-          backgroundColor: CupertinoColors.systemGroupedBackground,
+        backgroundColor: themeProvider.getBackgroundColor(context),
+        navigationBar: CupertinoNavigationBar(
+          middle: const Text('BabyCare SK'),
+          backgroundColor: themeProvider.getBackgroundColor(context),
           border: null,
         ),
         child: SafeArea(
@@ -53,7 +58,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 title: 'Dojčenie dnes',
                 value: '${_todayCount}x',
                 icon: CupertinoIcons.heart_fill,
-                iconColor: CupertinoColors.systemPink,
+                iconColor: Provider.of<ThemeProvider>(context, listen: false).getPrimaryColor(),
+                showChevron: true,
                 onTap: () async {
                   await Navigator.of(context).push(
                     CupertinoPageRoute(
@@ -72,12 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
               const BottleFeedingCard(),
               const SizedBox(height: 16),
               // Karta plienky
-              const ActivityCard(
-                title: 'Plienky',
-                value: '6x',
-                icon: CupertinoIcons.circle_grid_3x3_fill,
-                iconColor: CupertinoColors.systemGreen,
-              ),
+              const DiaperCard(),
               const SizedBox(height: 16),
               // Karta vitamín D
               const VitaminDCard(),

@@ -1,73 +1,44 @@
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/theme_provider.dart';
-import '../services/sleep_service.dart';
-import '../screens/sleep_screen.dart';
+import '../services/diaper_service.dart';
+import '../screens/diaper_screen.dart';
 
-class SleepCard extends StatefulWidget {
-  const SleepCard({super.key});
+/// Karta pre plienky na domovskej obrazovke
+class DiaperCard extends StatefulWidget {
+  const DiaperCard({super.key});
 
   @override
-  State<SleepCard> createState() => _SleepCardState();
+  State<DiaperCard> createState() => _DiaperCardState();
 }
 
-class _SleepCardState extends State<SleepCard> {
-  late SleepService _sleepService;
-  bool _isLoading = true;
-  Duration _totalSleep = Duration.zero;
-  int _sleepCount = 0;
+class _DiaperCardState extends State<DiaperCard> {
+  final DiaperService _service = DiaperService();
+  int _todayCount = 0;
 
   @override
   void initState() {
     super.initState();
-    _initService();
-  }
-
-  Future<void> _initService() async {
-    final prefs = await SharedPreferences.getInstance();
-    _sleepService = SleepService(prefs);
     _loadData();
   }
 
-  void _loadData() {
-    if (mounted) {
-      setState(() {
-        _totalSleep = _sleepService.getTotalSleepToday();
-        _sleepCount = _sleepService.getSleepCountToday();
-        _isLoading = false;
-      });
-    }
-  }
-
-  String _formatDuration(Duration duration) {
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes.remainder(60);
-    if (hours > 0) {
-      return '${hours}h ${minutes}m';
-    }
-    return '${minutes}m';
+  Future<void> _loadData() async {
+    final count = await _service.getTodayCount();
+    setState(() {
+      _todayCount = count;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     
-    if (_isLoading) {
-      return Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: themeProvider.getCardColor(context),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: const Center(child: CupertinoActivityIndicator()),
-      );
-    }
-
     return GestureDetector(
       onTap: () async {
         await Navigator.of(context).push(
-          CupertinoPageRoute(builder: (context) => const SleepScreen()),
+          CupertinoPageRoute(
+            builder: (context) => const DiaperScreen(),
+          ),
         );
         _loadData();
       },
@@ -87,30 +58,28 @@ class _SleepCardState extends State<SleepCard> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Ikonka
             Container(
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: CupertinoColors.systemIndigo.withValues(alpha: 0.1),
+                color: CupertinoColors.systemGreen.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Center(
                 child: Icon(
-                  CupertinoIcons.moon_fill,
+                  CupertinoIcons.circle_grid_3x3_fill,
                   size: 28,
-                  color: CupertinoColors.systemIndigo,
+                  color: CupertinoColors.systemGreen,
                 ),
               ),
             ),
             const SizedBox(width: 16),
-            // Text
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Spánok',
+                    'Plienky',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
@@ -119,7 +88,7 @@ class _SleepCardState extends State<SleepCard> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${_formatDuration(_totalSleep)} • $_sleepCount${_sleepCount == 1 ? 'x' : 'x'}',
+                    '${_todayCount}x dnes',
                     style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,

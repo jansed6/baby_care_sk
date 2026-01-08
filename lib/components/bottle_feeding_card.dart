@@ -1,4 +1,6 @@
 import 'package:flutter/cupertino.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 import '../services/bottle_feeding_service.dart';
 import '../screens/bottle_feeding_screen.dart';
 
@@ -35,6 +37,8 @@ class _BottleFeedingCardState extends State<BottleFeedingCard> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return GestureDetector(
       onTap: () async {
         await Navigator.of(context).push(
@@ -48,7 +52,7 @@ class _BottleFeedingCardState extends State<BottleFeedingCard> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: CupertinoColors.systemBackground,
+          color: themeProvider.getCardColor(context),
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
@@ -59,19 +63,22 @@ class _BottleFeedingCardState extends State<BottleFeedingCard> {
           ],
         ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // Ikona
             Container(
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: CupertinoColors.systemBlue.withOpacity(0.1),
+                color: themeProvider.getAccentColorLight(),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(
-                CupertinoIcons.drop_fill,
-                color: CupertinoColors.systemBlue,
-                size: 28,
+              child: Center(
+                child: Icon(
+                  CupertinoIcons.drop_fill,
+                  color: themeProvider.getPrimaryColor(),
+                  size: 28,
+                ),
               ),
             ),
             const SizedBox(width: 16),
@@ -81,30 +88,33 @@ class _BottleFeedingCardState extends State<BottleFeedingCard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Fľaša',
                     style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: CupertinoColors.systemGrey,
                     ),
                   ),
                   const SizedBox(height: 4),
                   if (_isLoading)
                     const CupertinoActivityIndicator()
                   else if (_todayCount == 0)
-                    const Text(
+                    Text(
                       'Žiadne záznamy dnes',
                       style: TextStyle(
-                        fontSize: 15,
-                        color: CupertinoColors.systemGrey,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
+                        color: themeProvider.getTextColor(context),
                       ),
                     )
                   else
                     Text(
                       '$_todayCount× • $_todayVolume ml',
-                      style: const TextStyle(
-                        fontSize: 15,
-                        color: CupertinoColors.systemGrey,
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
+                        color: themeProvider.getTextColor(context),
                       ),
                     ),
                 ],

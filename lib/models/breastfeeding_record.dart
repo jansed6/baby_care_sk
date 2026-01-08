@@ -1,14 +1,17 @@
 class BreastfeedingRecord {
+  final String id;
   final DateTime time;
   final BreastfeedingSide side;
 
   BreastfeedingRecord({
+    String? id,
     required this.time,
     required this.side,
-  });
+  }) : id = id ?? DateTime.now().millisecondsSinceEpoch.toString();
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'time': time.toIso8601String(),
       'side': side.toString(),
     };
@@ -18,6 +21,7 @@ class BreastfeedingRecord {
     // Podpora starého formátu (startTime) aj nového (time)
     final timeString = json['time'] ?? json['startTime'];
     return BreastfeedingRecord(
+      id: json['id'],
       time: DateTime.parse(timeString),
       side: BreastfeedingSide.values.firstWhere(
         (e) => e.toString() == json['side'],

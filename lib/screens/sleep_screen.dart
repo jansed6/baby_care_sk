@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../providers/theme_provider.dart';
 import '../models/sleep_record.dart';
 import '../services/sleep_service.dart';
 
@@ -15,7 +17,6 @@ class _SleepScreenState extends State<SleepScreen> {
   late SleepService _sleepService;
   bool _isLoading = true;
   SleepRecord? _activeRecord;
-  List<SleepRecord> _todayRecords = [];
   List<SleepRecord> _recentRecords = [];
   late Stream<int> _clockStream;
 
@@ -38,7 +39,6 @@ class _SleepScreenState extends State<SleepScreen> {
   void _loadData() {
     setState(() {
       _activeRecord = _sleepService.getActiveRecord();
-      _todayRecords = _sleepService.getTodayRecords();
       _recentRecords = _sleepService.getRecentRecords(daysAgo: 7);
       _isLoading = false;
     });
@@ -283,11 +283,13 @@ class _SleepScreenState extends State<SleepScreen> {
     final totalSleep = _sleepService.getTotalSleepToday();
     final sleepCount = _sleepService.getSleepCountToday();
 
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return CupertinoPageScaffold(
-      backgroundColor: CupertinoColors.systemGroupedBackground,
+      backgroundColor: themeProvider.getBackgroundColor(context),
       navigationBar: CupertinoNavigationBar(
         middle: const Text('Spánok'),
-        backgroundColor: CupertinoColors.systemGroupedBackground,
+        backgroundColor: themeProvider.getBackgroundColor(context),
         border: null,
         leading: CupertinoButton(
           padding: EdgeInsets.zero,
@@ -307,10 +309,10 @@ class _SleepScreenState extends State<SleepScreen> {
                 builder: (context, snapshot) {
                   return Text(
                     _getCurrentTime(),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 56,
                       fontWeight: FontWeight.w300,
-                      color: CupertinoColors.black,
+                      color: themeProvider.getTextColor(context),
                     ),
                   );
                 },
@@ -321,7 +323,7 @@ class _SleepScreenState extends State<SleepScreen> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: CupertinoColors.white,
+                color: themeProvider.getCardColor(context),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -339,10 +341,10 @@ class _SleepScreenState extends State<SleepScreen> {
                       const SizedBox(height: 4),
                       Text(
                         _formatDuration(totalSleep),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.w600,
-                          color: CupertinoColors.black,
+                          color: themeProvider.getTextColor(context),
                         ),
                       ),
                     ],
@@ -364,10 +366,10 @@ class _SleepScreenState extends State<SleepScreen> {
                       const SizedBox(height: 4),
                       Text(
                         '$sleepCount',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.w600,
-                          color: CupertinoColors.black,
+                          color: themeProvider.getTextColor(context),
                         ),
                       ),
                     ],
@@ -387,7 +389,7 @@ class _SleepScreenState extends State<SleepScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 decoration: BoxDecoration(
-                  color: CupertinoColors.white,
+                  color: themeProvider.getCardColor(context),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: CupertinoColors.systemGrey4),
                 ),
@@ -419,7 +421,7 @@ class _SleepScreenState extends State<SleepScreen> {
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
           color: _activeRecord == null
-              ? CupertinoColors.systemBlue
+              ? Provider.of<ThemeProvider>(context, listen: false).getPrimaryColor()
               : CupertinoColors.systemOrange,
           borderRadius: BorderRadius.circular(12),
         ),
@@ -437,15 +439,16 @@ class _SleepScreenState extends State<SleepScreen> {
   }
 
   Widget _buildHistory() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'História (7 dní):',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
-            color: CupertinoColors.black,
+            color: themeProvider.getTextColor(context),
           ),
         ),
         const SizedBox(height: 12),
@@ -471,13 +474,14 @@ class _SleepScreenState extends State<SleepScreen> {
   }
 
   Widget _buildHistoryItem(SleepRecord record) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     final isActive = record.isActive;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: CupertinoColors.white,
+        color: themeProvider.getCardColor(context),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -496,9 +500,9 @@ class _SleepScreenState extends State<SleepScreen> {
           Expanded(
             child: Text(
               '${record.startTime.hour.toString().padLeft(2, '0')}:${record.startTime.minute.toString().padLeft(2, '0')} - ${record.endTime != null ? '${record.endTime!.hour.toString().padLeft(2, '0')}:${record.endTime!.minute.toString().padLeft(2, '0')}' : 'prebieha'}  ${record.duration != null ? _formatDuration(record.duration!) : ''}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
-                color: CupertinoColors.black,
+                color: themeProvider.getTextColor(context),
               ),
             ),
           ),

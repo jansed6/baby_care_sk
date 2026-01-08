@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import '../screens/statistics_screen.dart';
+import '../screens/settings_screen.dart';
 
 /// Wrapper pre CupertinoTabScaffold s jednotnym bottom navigation barom
 /// pre vsetky obrazovky aplikacie
@@ -46,7 +47,6 @@ class _BottomNavigationBarState extends State<BottomNavigationBar> {
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(CupertinoIcons.house_fill)),
-          BottomNavigationBarItem(icon: Icon(CupertinoIcons.plus_circle_fill)),
           BottomNavigationBarItem(icon: Icon(CupertinoIcons.chart_bar_fill)),
           BottomNavigationBarItem(icon: Icon(CupertinoIcons.gear_alt_fill)),
         ],
@@ -57,8 +57,12 @@ class _BottomNavigationBarState extends State<BottomNavigationBar> {
           return widget.child;
         }
         // Statistiky
-        if (index == 2) {
+        if (index == 1) {
           return const StatisticsScreen();
+        }
+        // Nastavenia
+        if (index == 2) {
+          return const SettingsScreen();
         }
         // Ostatne sekcie - placeholder
         return CupertinoPageScaffold(
@@ -81,10 +85,8 @@ class _BottomNavigationBarState extends State<BottomNavigationBar> {
       case 0:
         return 'Domov';
       case 1:
-        return 'Pridat aktivitu';
-      case 2:
         return 'Statistiky';
-      case 3:
+      case 2:
         return 'Nastavenia';
       default:
         return '';

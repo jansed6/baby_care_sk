@@ -1,4 +1,6 @@
 import 'package:flutter/cupertino.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 import '../components/period_selector.dart';
 import 'dart:math' as math;
 
@@ -20,10 +22,11 @@ class SleepStatisticsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: CupertinoColors.white,
+        color: themeProvider.getCardColor(context),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -51,12 +54,12 @@ class SleepStatisticsCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Spánok',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: CupertinoColors.black,
+                  color: themeProvider.getTextColor(context),
                 ),
               ),
             ],
@@ -98,11 +101,13 @@ class SleepStatisticsCard extends StatelessWidget {
       children: [
         SizedBox(
           height: 150,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: displayDates.map((date) {
-              return Expanded(child: _buildBar(date, maxDuration));
-            }).toList(),
+          child: Builder(
+            builder: (context) => Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: displayDates.map((date) {
+                return Expanded(child: _buildBar(context, date, maxDuration));
+              }).toList(),
+            ),
           ),
         ),
         const SizedBox(height: 8),
@@ -224,7 +229,8 @@ class SleepStatisticsCard extends StatelessWidget {
     }
   }
 
-  Widget _buildBar(DateTime date, Duration maxDuration) {
+  Widget _buildBar(BuildContext context, DateTime date, Duration maxDuration) {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     final duration = _getDisplayDuration(date);
     final hours = duration.inMinutes / 60.0;
 
@@ -251,10 +257,10 @@ class SleepStatisticsCard extends StatelessWidget {
         children: [
           Text(
             _formatHours(hours),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w600,
-              color: CupertinoColors.black,
+              color: themeProvider.getTextColor(context),
             ),
           ),
           const SizedBox(height: 2),
@@ -266,8 +272,8 @@ class SleepStatisticsCard extends StatelessWidget {
                 begin: Alignment.bottomCenter,
                 end: Alignment.topCenter,
                 colors: [
-                  CupertinoColors.systemIndigo.withValues(alpha: 0.8),
-                  CupertinoColors.systemPurple.withValues(alpha: 0.6),
+                  themeProvider.getPrimaryColor().withValues(alpha: 0.9),
+                  themeProvider.getPrimaryColor().withValues(alpha: 0.6),
                 ],
               ),
             ),
@@ -286,30 +292,33 @@ class SleepStatisticsCard extends StatelessWidget {
   }
 
   Widget _buildLegend() {
-    final (periodDays, startDate) = _getPeriodInfo();
-    final totalDuration = _calculateTotalDuration(startDate);
-    final averageHours = totalDuration.inMinutes / 60.0 / periodDays;
+    return Builder(
+      builder: (context) {
+        final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+        final (periodDays, startDate) = _getPeriodInfo();
+        final totalDuration = _calculateTotalDuration(startDate);
+        final averageHours = totalDuration.inMinutes / 60.0 / periodDays;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 12,
-              height: 12,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(3),
-                gradient: LinearGradient(
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                  colors: [
-                    CupertinoColors.systemIndigo.withValues(alpha: 0.8),
-                    CupertinoColors.systemPurple.withValues(alpha: 0.6),
-                  ],
+            Row(
+              children: [
+                Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(3),
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      colors: [
+                        themeProvider.getPrimaryColor().withValues(alpha: 0.9),
+                        themeProvider.getPrimaryColor().withValues(alpha: 0.6),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-            ),
             const SizedBox(width: 6),
             Text(
               'Celkom: ${_formatDuration(totalDuration)}',
@@ -324,15 +333,15 @@ class SleepStatisticsCard extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: CupertinoColors.systemGrey6,
+            color: themeProvider.getAccentColorLight(),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
             children: [
-              const Icon(
+              Icon(
                 CupertinoIcons.info_circle_fill,
                 size: 16,
-                color: CupertinoColors.systemBlue,
+                color: themeProvider.getPrimaryColor(),
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -350,6 +359,8 @@ class SleepStatisticsCard extends StatelessWidget {
           ),
         ),
       ],
+    );
+      },
     );
   }
 

@@ -1,4 +1,6 @@
 import 'package:flutter/cupertino.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 import '../components/period_selector.dart';
 
 class BottleFeedingStatisticsCard extends StatelessWidget {
@@ -15,10 +17,11 @@ class BottleFeedingStatisticsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: CupertinoColors.white,
+        color: themeProvider.getCardColor(context),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -36,22 +39,22 @@ class BottleFeedingStatisticsCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: CupertinoColors.systemBlue.withOpacity(0.1),
+                  color: themeProvider.getAccentColorLight(),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(
+                child: Icon(
                   CupertinoIcons.drop_fill,
                   size: 18,
-                  color: CupertinoColors.systemBlue,
+                  color: themeProvider.getPrimaryColor(),
                 ),
               ),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Fľaša',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: CupertinoColors.black,
+                  color: themeProvider.getTextColor(context),
                 ),
               ),
             ],
@@ -88,41 +91,46 @@ class BottleFeedingStatisticsCard extends StatelessWidget {
   }
 
   Widget _buildSummaryStats() {
-    final data = _getChartData();
-    
-    // Celkový objem
-    final totalVolume = data.values.fold<int>(0, (sum, vol) => sum + vol);
-    
-    // Priemerný denný objem - počítame vždy z denných dát
-    double avgDailyVolume = 0;
-    if (selectedPeriod == StatisticsPeriod.week) {
-      // Pre týždeň: priemer za 7 dní
-      avgDailyVolume = totalVolume / 7;
-    } else if (selectedPeriod == StatisticsPeriod.month) {
-      // Pre mesiac: priemer za 35 dní (5 týždňov)
-      avgDailyVolume = totalVolume / 35;
-    } else {
-      // Pre rok: priemer za 365 dní
-      avgDailyVolume = totalVolume / 365;
-    }
-    
-    return Row(
-      children: [
-        Expanded(
-          child: _buildStatItem(
-            'Celkom',
-            '${totalVolume} ml',
-            CupertinoColors.systemBlue,
-          ),
-        ),
-        Expanded(
-          child: _buildStatItem(
-            'Priemer/deň',
-            '${avgDailyVolume.toStringAsFixed(0)} ml',
-            CupertinoColors.systemGreen,
-          ),
-        ),
-      ],
+    return Builder(
+      builder: (context) {
+        final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+        final data = _getChartData();
+        
+        // Celkový objem
+        final totalVolume = data.values.fold<int>(0, (sum, vol) => sum + vol);
+        
+        // Priemerný denný objem - počítame vždy z denných dát
+        double avgDailyVolume = 0;
+        if (selectedPeriod == StatisticsPeriod.week) {
+          // Pre týždeň: priemer za 7 dní
+          avgDailyVolume = totalVolume / 7;
+        } else if (selectedPeriod == StatisticsPeriod.month) {
+          // Pre mesiac: priemer za 35 dní (5 týždňov)
+          avgDailyVolume = totalVolume / 35;
+        } else {
+          // Pre rok: priemer za 365 dní
+          avgDailyVolume = totalVolume / 365;
+        }
+        
+        return Row(
+          children: [
+            Expanded(
+              child: _buildStatItem(
+                'Celkom',
+                '${totalVolume} ml',
+                themeProvider.getPrimaryColor(),
+              ),
+            ),
+            Expanded(
+              child: _buildStatItem(
+                'Priemer/deň',
+                '${avgDailyVolume.toStringAsFixed(0)} ml',
+                themeProvider.getPrimaryColor().withValues(alpha: 0.7),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -158,30 +166,33 @@ class BottleFeedingStatisticsCard extends StatelessWidget {
   }
 
   Widget _buildChart() {
-    final data = _getChartData();
-    if (data.isEmpty) {
-      return const SizedBox.shrink();
-    }
+    return Builder(
+      builder: (context) {
+        final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+        final data = _getChartData();
+        if (data.isEmpty) {
+          return const SizedBox.shrink();
+        }
 
-    // Nájdi maximum pre škálovanie
-    final maxVolume = data.values.reduce((a, b) => a > b ? a : b);
+        // Nájdi maximum pre škálovanie
+        final maxVolume = data.values.reduce((a, b) => a > b ? a : b);
 
-    if (maxVolume == 0) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(20),
-          child: Text(
-            'Žiadne dáta za zvolené obdobie',
-            style: TextStyle(
-              color: CupertinoColors.systemGrey,
-              fontSize: 14,
+        if (maxVolume == 0) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(20),
+              child: Text(
+                'Žiadne dáta za zvolené obdobie',
+                style: TextStyle(
+                  color: CupertinoColors.systemGrey,
+                  fontSize: 14,
+                ),
+              ),
             ),
-          ),
-        ),
-      );
-    }
+          );
+        }
 
-    return Column(
+        return Column(
       children: [
         SizedBox(
           height: 180,
@@ -210,7 +221,7 @@ class BottleFeedingStatisticsCard extends StatelessWidget {
                                 fontSize: 9,
                                 fontWeight: FontWeight.w600,
                                 color: isCurrentPeriod 
-                                    ? CupertinoColors.systemBlue
+                                    ? themeProvider.getPrimaryColor()
                                     : CupertinoColors.systemGrey2,
                               ),
                             ),
@@ -220,8 +231,8 @@ class BottleFeedingStatisticsCard extends StatelessWidget {
                         height: height,
                         decoration: BoxDecoration(
                           color: isCurrentPeriod
-                              ? CupertinoColors.systemBlue
-                              : CupertinoColors.systemBlue.withOpacity(0.3),
+                              ? themeProvider.getPrimaryColor()
+                              : themeProvider.getPrimaryColor().withOpacity(0.3),
                           borderRadius: const BorderRadius.vertical(
                             top: Radius.circular(4),
                           ),
@@ -233,7 +244,7 @@ class BottleFeedingStatisticsCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 11,
                           color: isCurrentPeriod 
-                              ? CupertinoColors.systemBlue
+                              ? themeProvider.getPrimaryColor()
                               : CupertinoColors.systemGrey,
                           fontWeight: isCurrentPeriod ? FontWeight.bold : FontWeight.normal,
                         ),
@@ -256,6 +267,8 @@ class BottleFeedingStatisticsCard extends StatelessWidget {
           ),
         ),
       ],
+    );
+      },
     );
   }
 

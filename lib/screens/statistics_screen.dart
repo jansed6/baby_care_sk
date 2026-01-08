@@ -1,13 +1,18 @@
 import 'package:flutter/cupertino.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../providers/theme_provider.dart';
 import '../models/breastfeeding_record.dart';
+import '../models/diaper_record.dart';
 import '../services/breastfeeding_service.dart';
 import '../services/bottle_feeding_service.dart';
 import '../services/sleep_service.dart';
+import '../services/diaper_service.dart';
 import '../components/period_selector.dart';
 import '../components/breastfeeding_statistics_card.dart';
 import '../components/bottle_feeding_statistics_card.dart';
 import '../components/sleep_statistics_card.dart';
+import '../components/diaper_statistics_card.dart';
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
@@ -19,11 +24,13 @@ class StatisticsScreen extends StatefulWidget {
 class _StatisticsScreenState extends State<StatisticsScreen> {
   final BreastfeedingService _breastfeedingService = BreastfeedingService();
   final BottleFeedingService _bottleFeedingService = BottleFeedingService();
+  final DiaperService _diaperService = DiaperService();
   late SleepService _sleepService;
   StatisticsPeriod _selectedPeriod = StatisticsPeriod.week;
   Map<DateTime, Map<BreastfeedingSide, int>> _breastfeedingStatistics = {};
   Map<DateTime, int> _bottleFeedingStatistics = {};
   Map<DateTime, Duration> _sleepStatistics = {};
+  Map<DateTime, Map<DiaperType, int>> _diaperStatistics = {};
   bool _isLoading = true;
   bool _isServiceInitialized = false;
 
@@ -58,6 +65,10 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     // Načítaj spánok
     final allSleepRecords = _sleepService.getAllRecords();
     final sleepStats = <DateTime, Duration>{};
+
+    // Načítaj plienky
+    final allDiaperRecords = await _diaperService.getAllRecords();
+    final diaperStats = <DateTime, Map<DiaperType, int>>{};
 
     final now = DateTime.now();
     DateTime startDate;
@@ -164,10 +175,44 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       }
     }
 
+    // Spracuj plienky
+    for (var record in allDiaperRecords) {
+      DateTime recordDate;
+
+      if (_selectedPeriod == StatisticsPeriod.year) {
+        recordDate = DateTime(record.dateTime.year, record.dateTime.month, 1);
+      } else if (_selectedPeriod == StatisticsPeriod.month) {
+        final daysFromMonday = (record.dateTime.weekday - 1);
+        final weekStart = record.dateTime.subtract(Duration(days: daysFromMonday));
+        recordDate = DateTime(weekStart.year, weekStart.month, weekStart.day);
+      } else {
+        recordDate = DateTime(
+          record.dateTime.year,
+          record.dateTime.month,
+          record.dateTime.day,
+        );
+      }
+
+      if (recordDate.isAfter(startDate.subtract(Duration(days: 1))) &&
+          recordDate.isBefore(now.add(Duration(days: 1)))) {
+        if (!diaperStats.containsKey(recordDate)) {
+          diaperStats[recordDate] = {
+            DiaperType.wet: 0,
+            DiaperType.dirty: 0,
+            DiaperType.mixed: 0,
+          };
+        }
+
+        diaperStats[recordDate]![record.type] =
+            diaperStats[recordDate]![record.type]! + 1;
+      }
+    }
+
     setState(() {
       _breastfeedingStatistics = breastfeedingStats;
       _bottleFeedingStatistics = bottleFeedingStats;
       _sleepStatistics = sleepStats;
+      _diaperStatistics = diaperStats;
       _isLoading = false;
     });
   }
@@ -185,7 +230,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       builder: (context) => CupertinoAlertDialog(
         title: const Text('Generovať testovacie dáta?'),
         content: const Text(
-          'Toto vytvorí náhodné dojčenie, fľašu a spánok za posledný rok. Existujúce dáta budú nahradené.',
+          'Toto vytvorí náhodné dojčenie, fľašu, spánok a plienky za posledný rok. Existujúce dáta budú nahradené.',
         ),
         actions: [
           CupertinoDialogAction(
@@ -206,17 +251,20 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       await _breastfeedingService.generateTestData();
       await _bottleFeedingService.generateTestData();
       await _sleepService.generateTestData();
+      await _diaperService.generateTestData();
       await _loadStatistics();
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return CupertinoPageScaffold(
-      backgroundColor: CupertinoColors.systemGroupedBackground,
+      backgroundColor: themeProvider.getBackgroundColor(context),
       navigationBar: CupertinoNavigationBar(
         middle: const Text('Statistiky'),
-        backgroundColor: CupertinoColors.systemGroupedBackground,
+        backgroundColor: themeProvider.getBackgroundColor(context),
         border: null,
         trailing: CupertinoButton(
           padding: EdgeInsets.zero,
@@ -248,6 +296,12 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             const SizedBox(height: 16),
             BottleFeedingStatisticsCard(
               statistics: _bottleFeedingStatistics,
+              selectedPeriod: _selectedPeriod,
+              isLoading: _isLoading,
+            ),
+            const SizedBox(height: 16),
+            DiaperStatisticsCard(
+              statistics: _diaperStatistics,
               selectedPeriod: _selectedPeriod,
               isLoading: _isLoading,
             ),

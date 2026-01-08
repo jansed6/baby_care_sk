@@ -1,4 +1,6 @@
 import 'package:flutter/cupertino.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 import '../models/bottle_feeding_record.dart';
 import '../services/bottle_feeding_service.dart';
 
@@ -28,7 +30,7 @@ class _BottleFeedingScreenState extends State<BottleFeedingScreen> {
     });
   }
 
-  void _showAddBottleModal() {
+  void _showAddBottleModal({BottleFeedingRecord? prefillWith}) {
     showCupertinoModalPopup(
       context: context,
       builder: (BuildContext context) => _AddBottleModal(
@@ -36,19 +38,47 @@ class _BottleFeedingScreenState extends State<BottleFeedingScreen> {
           await _service.saveRecord(record);
           _loadData();
         },
+        prefillWith: prefillWith,
       ),
     );
   }
 
+  Future<void> _deleteRecord(String id) async {
+    final shouldDelete = await showCupertinoDialog<bool>(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text('Vymazať záznam'),
+        content: const Text('Naozaj chcete vymazať tento záznam?'),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Zrušiť'),
+          ),
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Vymazať'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDelete == true) {
+      await _service.deleteRecord(id);
+      _loadData();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     final todayTotal = _todayRecords.fold(0, (sum, r) => sum + r.volumeMl);
 
     return CupertinoPageScaffold(
-      backgroundColor: CupertinoColors.systemGroupedBackground,
+      backgroundColor: themeProvider.getBackgroundColor(context),
       navigationBar: CupertinoNavigationBar(
         middle: const Text('Fľaša'),
-        backgroundColor: CupertinoColors.systemGroupedBackground,
+        backgroundColor: themeProvider.getBackgroundColor(context),
         border: null,
         trailing: CupertinoButton(
           padding: EdgeInsets.zero,
@@ -57,113 +87,249 @@ class _BottleFeedingScreenState extends State<BottleFeedingScreen> {
         ),
       ),
       child: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            // Dnešné záznamy
-            _buildTodaySection(todayTotal),
+        child: CustomScrollView(
+          slivers: [
+            // Header s dnešným sumárom
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: _buildTodayHeader(todayTotal),
+              ),
+            ),
+
+            // Quick action button
+            if (_todayRecords.isNotEmpty)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: _buildQuickAddButton(),
+                ),
+              ),
+
+            // História ako list
+            if (_todayRecords.isEmpty)
+              SliverFillRemaining(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        CupertinoIcons.drop,
+                        size: 64,
+                        color: CupertinoColors.systemGrey.withOpacity(0.5),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Žiadne záznamy dnes',
+                        style: TextStyle(
+                          fontSize: 17,
+                          color: CupertinoColors.systemGrey,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Pridaj prvé kŕmenie',
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: CupertinoColors.systemGrey2,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final record = _todayRecords[index];
+                  return _buildRecordListItem(record, index);
+                }, childCount: _todayRecords.length),
+              ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTodaySection(int todayTotal) {
+  Widget _buildTodayHeader(int todayTotal) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: CupertinoColors.systemBackground,
-        borderRadius: BorderRadius.circular(12),
+        color: themeProvider.getCardColor(context),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: CupertinoColors.systemGrey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          const Text(
-            'Dnes',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: themeProvider.getAccentColorLight(),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(
+              CupertinoIcons.drop_fill,
+              color: themeProvider.getPrimaryColor(),
+              size: 32,
             ),
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              const Icon(
-                CupertinoIcons.drop_fill,
-                color: CupertinoColors.systemBlue,
-                size: 32,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                '${_todayRecords.length}× • $todayTotal ml',
-                style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w600,
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Dnes celkom',
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: CupertinoColors.systemGrey,
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 4),
+                Text(
+                  '${_todayRecords.length}× • $todayTotal ml',
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: themeProvider.getTextColor(context),
+                  ),
+                ),
+              ],
+            ),
           ),
-          if (_todayRecords.isEmpty)
-            const Padding(
-              padding: EdgeInsets.only(top: 8),
-              child: Text(
-                'Žiadne záznamy dnes',
-                style: TextStyle(
-                  color: CupertinoColors.systemGrey,
-                  fontSize: 15,
-                ),
-              ),
-            ),
-          if (_todayRecords.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            Container(
-              height: 0.5,
-              color: CupertinoColors.separator,
-            ),
-            const SizedBox(height: 8),
-            ..._todayRecords.map((record) => _buildRecordItem(record)),
-          ],
         ],
       ),
     );
   }
 
-  Widget _buildRecordItem(BottleFeedingRecord record) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: CupertinoColors.systemBlue.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
+  Widget _buildQuickAddButton() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final lastRecord = _todayRecords.first;
+    return CupertinoButton(
+      padding: EdgeInsets.zero,
+      onPressed: () => _showAddBottleModal(prefillWith: lastRecord),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: themeProvider.getAccentColorLight(),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: themeProvider.getPrimaryColor().withOpacity(0.3),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              CupertinoIcons.arrow_clockwise,
+              color: themeProvider.getPrimaryColor(),
+              size: 20,
             ),
-            child: Text(
-              record.formattedTime,
-              style: const TextStyle(
+            const SizedBox(width: 8),
+            Text(
+              'Pridať rovnaké (${lastRecord.volumeMl} ml ${lastRecord.typeLabel})',
+              style: TextStyle(
+                color: themeProvider.getPrimaryColor(),
                 fontWeight: FontWeight.w600,
                 fontSize: 15,
               ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            '${record.volumeMl} ml',
-            style: const TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w500,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRecordListItem(BottleFeedingRecord record, int index) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    return Container(
+      margin: EdgeInsets.fromLTRB(
+        16,
+        index == 0 ? 0 : 8,
+        16,
+        index == _todayRecords.length - 1 ? 16 : 0,
+      ),
+      decoration: BoxDecoration(
+        color: themeProvider.getCardColor(context),
+        borderRadius: BorderRadius.vertical(
+          top: index == 0 ? const Radius.circular(12) : Radius.zero,
+          bottom: index == _todayRecords.length - 1
+              ? const Radius.circular(12)
+              : Radius.zero,
+        ),
+        border: Border(
+          bottom: index == _todayRecords.length - 1
+              ? BorderSide.none
+              : const BorderSide(color: CupertinoColors.separator, width: 0.5),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: themeProvider.getAccentColorLight(),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                record.formattedTime,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                  color: themeProvider.getPrimaryColor(),
+                ),
+              ),
             ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            '• ${record.typeLabel}',
-            style: const TextStyle(
-              fontSize: 15,
-              color: CupertinoColors.systemGrey,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${record.volumeMl} ml',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      color: themeProvider.getTextColor(context),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    record.typeLabel,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: CupertinoColors.systemGrey,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+            CupertinoButton(
+              padding: EdgeInsets.zero,
+              minimumSize: Size.zero,
+              onPressed: () => _deleteRecord(record.id),
+              child: const Icon(
+                CupertinoIcons.delete,
+                size: 20,
+                color: CupertinoColors.systemRed,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -172,18 +338,33 @@ class _BottleFeedingScreenState extends State<BottleFeedingScreen> {
 /// Modal pre pridanie nového záznamu o kŕmení
 class _AddBottleModal extends StatefulWidget {
   final Function(BottleFeedingRecord) onSave;
+  final BottleFeedingRecord? prefillWith;
 
-  const _AddBottleModal({required this.onSave});
+  const _AddBottleModal({required this.onSave, this.prefillWith});
 
   @override
   State<_AddBottleModal> createState() => _AddBottleModalState();
 }
 
 class _AddBottleModalState extends State<_AddBottleModal> {
-  int _volumeMl = 120; // Predvolený objem
-  DateTime _selectedTime = DateTime.now();
-  BottleFeedingType _selectedType = BottleFeedingType.formula;
+  late int _volumeMl;
+  late DateTime _selectedTime;
+  late BottleFeedingType _selectedType;
   int? _lastClickedPreset; // Sledovanie posledného kliknutého presetu
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.prefillWith != null) {
+      _volumeMl = widget.prefillWith!.volumeMl;
+      _selectedType = widget.prefillWith!.type;
+      _selectedTime = DateTime.now();
+    } else {
+      _volumeMl = 120;
+      _selectedType = BottleFeedingType.formula;
+      _selectedTime = DateTime.now();
+    }
+  }
 
   void _setPresetVolume(int volume) {
     setState(() {
@@ -223,8 +404,18 @@ class _AddBottleModalState extends State<_AddBottleModal> {
       return;
     }
 
+    // Skombinuj dnešný dátum s vybratým časom
+    final now = DateTime.now();
+    final dateTime = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      _selectedTime.hour,
+      _selectedTime.minute,
+    );
+
     final record = BottleFeedingRecord(
-      dateTime: _selectedTime,
+      dateTime: dateTime,
       volumeMl: _volumeMl,
       type: _selectedType,
     );
@@ -235,11 +426,12 @@ class _AddBottleModalState extends State<_AddBottleModal> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       height: MediaQuery.of(context).size.height * 0.75,
-      decoration: const BoxDecoration(
-        color: CupertinoColors.systemBackground,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        color: themeProvider.getBackgroundColor(context),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
         children: [
@@ -262,11 +454,12 @@ class _AddBottleModalState extends State<_AddBottleModal> {
                   child: const Text('Zrušiť'),
                   onPressed: () => Navigator.pop(context),
                 ),
-                const Text(
+                Text(
                   'Pridať kŕmenie',
                   style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w600,
+                    color: themeProvider.getTextColor(context),
                   ),
                 ),
                 CupertinoButton(
@@ -280,17 +473,18 @@ class _AddBottleModalState extends State<_AddBottleModal> {
               ],
             ),
           ),
-          
+
           Expanded(
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
                 // Predvolené objemy
-                const Text(
+                Text(
                   'Objem',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
+                    color: themeProvider.getTextColor(context),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -302,16 +496,16 @@ class _AddBottleModalState extends State<_AddBottleModal> {
                         padding: const EdgeInsets.symmetric(horizontal: 4),
                         child: CupertinoButton(
                           padding: const EdgeInsets.symmetric(vertical: 12),
-                          color: isSelected 
-                              ? CupertinoColors.systemBlue
+                          color: isSelected
+                            ? themeProvider.getPrimaryColor()
                               : CupertinoColors.systemGrey5,
                           onPressed: () => _setPresetVolume(volume),
                           child: Text(
                             '$volume ml',
                             style: TextStyle(
-                              color: isSelected 
+                              color: isSelected
                                   ? CupertinoColors.white
-                                  : CupertinoColors.black,
+                                  : themeProvider.getTextColor(context),
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -320,14 +514,14 @@ class _AddBottleModalState extends State<_AddBottleModal> {
                     );
                   }).toList(),
                 ),
-                
+
                 const SizedBox(height: 20),
-                
+
                 // Stepper +/- 10 ml
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: CupertinoColors.systemGrey6,
+                    color: themeProvider.getCardColor(context),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -338,8 +532,8 @@ class _AddBottleModalState extends State<_AddBottleModal> {
                         child: Container(
                           width: 44,
                           height: 44,
-                          decoration: const BoxDecoration(
-                            color: CupertinoColors.systemBlue,
+                          decoration: BoxDecoration(
+                            color: themeProvider.getPrimaryColor(),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -352,9 +546,10 @@ class _AddBottleModalState extends State<_AddBottleModal> {
                       const SizedBox(width: 32),
                       Text(
                         '$_volumeMl ml',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
+                          color: themeProvider.getTextColor(context),
                         ),
                       ),
                       const SizedBox(width: 32),
@@ -363,8 +558,8 @@ class _AddBottleModalState extends State<_AddBottleModal> {
                         child: Container(
                           width: 44,
                           height: 44,
-                          decoration: const BoxDecoration(
-                            color: CupertinoColors.systemBlue,
+                          decoration: BoxDecoration(
+                            color: themeProvider.getPrimaryColor(),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -377,15 +572,16 @@ class _AddBottleModalState extends State<_AddBottleModal> {
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Typ kŕmenia
-                const Text(
+                Text(
                   'Typ',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
+                    color: themeProvider.getTextColor(context),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -393,7 +589,7 @@ class _AddBottleModalState extends State<_AddBottleModal> {
                   final isSelected = _selectedType == type;
                   String icon;
                   String label;
-                  
+
                   switch (type) {
                     case BottleFeedingType.formula:
                       icon = '🍼';
@@ -408,7 +604,7 @@ class _AddBottleModalState extends State<_AddBottleModal> {
                       label = 'Voda';
                       break;
                   }
-                  
+
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 8),
                     child: GestureDetector(
@@ -416,38 +612,36 @@ class _AddBottleModalState extends State<_AddBottleModal> {
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: isSelected 
-                              ? CupertinoColors.systemBlue.withOpacity(0.1)
-                              : CupertinoColors.systemGrey6,
+                          color: isSelected
+                              ? themeProvider.getAccentColorLight()
+                              : themeProvider.getCardColor(context),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: isSelected 
-                                ? CupertinoColors.systemBlue
+                            color: isSelected
+                                ? themeProvider.getPrimaryColor()
                                 : CupertinoColors.transparent,
                             width: 2,
                           ),
                         ),
                         child: Row(
                           children: [
-                            Text(
-                              icon,
-                              style: const TextStyle(fontSize: 24),
-                            ),
+                            Text(icon, style: const TextStyle(fontSize: 24)),
                             const SizedBox(width: 12),
                             Text(
                               label,
                               style: TextStyle(
                                 fontSize: 17,
-                                fontWeight: isSelected 
-                                    ? FontWeight.w600 
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
                                     : FontWeight.normal,
+                                color: themeProvider.getTextColor(context),
                               ),
                             ),
                             const Spacer(),
                             if (isSelected)
-                              const Icon(
+                              Icon(
                                 CupertinoIcons.checkmark_circle_fill,
-                                color: CupertinoColors.systemBlue,
+                                color: themeProvider.getPrimaryColor(),
                               ),
                           ],
                         ),
@@ -455,22 +649,23 @@ class _AddBottleModalState extends State<_AddBottleModal> {
                     ),
                   );
                 }).toList(),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Čas
-                const Text(
+                Text(
                   'Čas',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
+                    color: themeProvider.getTextColor(context),
                   ),
                 ),
                 const SizedBox(height: 12),
                 Container(
                   height: 150,
                   decoration: BoxDecoration(
-                    color: CupertinoColors.systemGrey6,
+                    color: themeProvider.getCardColor(context),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: CupertinoDatePicker(

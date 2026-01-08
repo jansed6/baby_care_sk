@@ -1,4 +1,6 @@
 import 'package:flutter/cupertino.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 import '../models/breastfeeding_record.dart';
 import '../services/breastfeeding_service.dart';
 
@@ -42,6 +44,32 @@ class _BreastfeedingScreenState extends State<BreastfeedingScreen> {
     await _loadTodayRecords();
   }
 
+  Future<void> _deleteRecord(String id) async {
+    final shouldDelete = await showCupertinoDialog<bool>(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text('Vymazať záznam'),
+        content: const Text('Naozaj chcete vymazať tento záznam?'),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Zrušiť'),
+          ),
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Vymazať'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDelete == true) {
+      await _service.deleteRecord(id);
+      await _loadTodayRecords();
+    }
+  }
+
   String _getCurrentTime() {
     final now = DateTime.now();
     return '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}';
@@ -49,11 +77,13 @@ class _BreastfeedingScreenState extends State<BreastfeedingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return CupertinoPageScaffold(
-      backgroundColor: CupertinoColors.systemGroupedBackground,
+      backgroundColor: themeProvider.getBackgroundColor(context),
       navigationBar: CupertinoNavigationBar(
         middle: const Text('Dojčenie'),
-        backgroundColor: CupertinoColors.systemGroupedBackground,
+        backgroundColor: themeProvider.getBackgroundColor(context),
         border: null,
         leading: CupertinoButton(
           padding: EdgeInsets.zero,
@@ -73,10 +103,10 @@ class _BreastfeedingScreenState extends State<BreastfeedingScreen> {
                 builder: (context, snapshot) {
                   return Text(
                     _getCurrentTime(),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 56,
                       fontWeight: FontWeight.w300,
-                      color: CupertinoColors.black,
+                      color: themeProvider.getTextColor(context),
                     ),
                   );
                 },
@@ -107,6 +137,7 @@ class _BreastfeedingScreenState extends State<BreastfeedingScreen> {
   }
 
   Widget _buildSideButton(String label, BreastfeedingSide side) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     final isSelected = _selectedSide == side;
 
     return GestureDetector(
@@ -119,12 +150,12 @@ class _BreastfeedingScreenState extends State<BreastfeedingScreen> {
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: isSelected
-              ? CupertinoColors.systemBlue
-              : CupertinoColors.white,
+              ? themeProvider.getPrimaryColor()
+              : themeProvider.getCardColor(context),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected
-                ? CupertinoColors.systemBlue
+                ? themeProvider.getPrimaryColor()
                 : CupertinoColors.systemGrey4,
           ),
         ),
@@ -134,7 +165,9 @@ class _BreastfeedingScreenState extends State<BreastfeedingScreen> {
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: isSelected ? CupertinoColors.white : CupertinoColors.black,
+            color: isSelected
+                ? CupertinoColors.white
+                : themeProvider.getTextColor(context),
           ),
         ),
       ),
@@ -142,6 +175,7 @@ class _BreastfeedingScreenState extends State<BreastfeedingScreen> {
   }
 
   Widget _buildSaveButton() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return CupertinoButton(
       padding: EdgeInsets.zero,
       onPressed: _saveRecord,
@@ -149,7 +183,7 @@ class _BreastfeedingScreenState extends State<BreastfeedingScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: CupertinoColors.systemBlue,
+          color: themeProvider.getPrimaryColor(),
           borderRadius: BorderRadius.circular(12),
         ),
         child: const Text(
@@ -166,15 +200,16 @@ class _BreastfeedingScreenState extends State<BreastfeedingScreen> {
   }
 
   Widget _buildHistory() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'História:',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
-            color: CupertinoColors.black,
+            color: themeProvider.getTextColor(context),
           ),
         ),
         const SizedBox(height: 12),
@@ -198,11 +233,12 @@ class _BreastfeedingScreenState extends State<BreastfeedingScreen> {
   }
 
   Widget _buildHistoryItem(BreastfeedingRecord record) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: CupertinoColors.white,
+        color: themeProvider.getCardColor(context),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -210,15 +246,30 @@ class _BreastfeedingScreenState extends State<BreastfeedingScreen> {
           Container(
             width: 6,
             height: 6,
-            decoration: const BoxDecoration(
-              color: CupertinoColors.systemPink,
+            decoration: BoxDecoration(
+              color: themeProvider.getPrimaryColor(),
               shape: BoxShape.circle,
             ),
           ),
           const SizedBox(width: 12),
-          Text(
-            '${record.formattedTime}  ${record.sideLabel}',
-            style: const TextStyle(fontSize: 16, color: CupertinoColors.black),
+          Expanded(
+            child: Text(
+              '${record.formattedTime}  ${record.sideLabel}',
+              style: TextStyle(
+                fontSize: 16,
+                color: themeProvider.getTextColor(context),
+              ),
+            ),
+          ),
+          CupertinoButton(
+            padding: EdgeInsets.zero,
+            minSize: 0,
+            onPressed: () => _deleteRecord(record.id),
+            child: const Icon(
+              CupertinoIcons.delete,
+              size: 20,
+              color: CupertinoColors.systemRed,
+            ),
           ),
         ],
       ),

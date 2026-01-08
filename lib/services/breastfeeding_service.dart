@@ -58,6 +58,15 @@ class BreastfeedingService {
     await prefs.remove(_storageKey);
   }
 
+  Future<void> deleteRecord(String id) async {
+    final prefs = await SharedPreferences.getInstance();
+    final records = await getAllRecords();
+    records.removeWhere((record) => record.id == id);
+
+    final jsonList = records.map((r) => r.toJson()).toList();
+    await prefs.setString(_storageKey, jsonEncode(jsonList));
+  }
+
   Future<void> generateTestData() async {
     final random = Random();
     final now = DateTime.now();

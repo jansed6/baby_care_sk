@@ -1,4 +1,6 @@
 import 'package:flutter/cupertino.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 import '../models/breastfeeding_record.dart';
 import '../components/period_selector.dart';
 import 'dart:math' as math;
@@ -38,10 +40,11 @@ class BreastfeedingStatisticsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: CupertinoColors.white,
+        color: themeProvider.getCardColor(context),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -59,22 +62,22 @@ class BreastfeedingStatisticsCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: CupertinoColors.systemPink.withValues(alpha: 0.1),
+                  color: themeProvider.getAccentColorLight(),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(
+                child: Icon(
                   CupertinoIcons.heart_fill,
                   size: 18,
-                  color: CupertinoColors.systemPink,
+                  color: themeProvider.getPrimaryColor(),
                 ),
               ),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Dojčenie',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: CupertinoColors.black,
+                  color: themeProvider.getTextColor(context),
                 ),
               ),
             ],
@@ -116,15 +119,17 @@ class BreastfeedingStatisticsCard extends StatelessWidget {
       children: [
         SizedBox(
           height: 150,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: displayDates.map((date) {
-              return Expanded(
-                child: selectedPeriod == StatisticsPeriod.year
-                    ? _buildYearBar(date, maxCount)
-                    : _buildBarGroup(date, maxCount),
-              );
-            }).toList(),
+          child: Builder(
+            builder: (context) => Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: displayDates.map((date) {
+                return Expanded(
+                  child: selectedPeriod == StatisticsPeriod.year
+                      ? _buildYearBar(context, date, maxCount)
+                      : _buildBarGroup(context, date, maxCount),
+                );
+              }).toList(),
+            ),
           ),
         ),
         const SizedBox(height: 8),
@@ -239,7 +244,8 @@ class BreastfeedingStatisticsCard extends StatelessWidget {
     }
   }
 
-  Widget _buildBarGroup(DateTime date, int maxCount) {
+  Widget _buildBarGroup(BuildContext context, DateTime date, int maxCount) {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 1),
       child: Row(
@@ -249,26 +255,27 @@ class BreastfeedingStatisticsCard extends StatelessWidget {
           _buildSingleBar(
             _getCount(date, BreastfeedingSide.left),
             maxCount,
-            CupertinoColors.systemPink.withValues(alpha: 0.8),
+            themeProvider.getPrimaryColor().withValues(alpha: 0.9),
           ),
           const SizedBox(width: 1),
           _buildSingleBar(
             _getCount(date, BreastfeedingSide.right),
             maxCount,
-            CupertinoColors.systemPurple.withValues(alpha: 0.7),
+            themeProvider.getPrimaryColor().withValues(alpha: 0.7),
           ),
           const SizedBox(width: 1),
           _buildSingleBar(
             _getCount(date, BreastfeedingSide.both),
             maxCount,
-            CupertinoColors.systemIndigo.withValues(alpha: 0.7),
+            themeProvider.getPrimaryColor().withValues(alpha: 0.5),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildYearBar(DateTime date, int maxCount) {
+  Widget _buildYearBar(BuildContext context, DateTime date, int maxCount) {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     final totalCount = _getTotalCount(date);
 
     if (totalCount == 0) {
@@ -293,10 +300,10 @@ class BreastfeedingStatisticsCard extends StatelessWidget {
         children: [
           Text(
             totalCount.toString(),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w600,
-              color: CupertinoColors.black,
+              color: themeProvider.getTextColor(context),
             ),
           ),
           const SizedBox(height: 2),
@@ -308,8 +315,8 @@ class BreastfeedingStatisticsCard extends StatelessWidget {
                 begin: Alignment.bottomCenter,
                 end: Alignment.topCenter,
                 colors: [
-                  CupertinoColors.systemPink.withValues(alpha: 0.8),
-                  CupertinoColors.systemPurple.withValues(alpha: 0.6),
+                  themeProvider.getPrimaryColor().withValues(alpha: 0.9),
+                  themeProvider.getPrimaryColor().withValues(alpha: 0.6),
                 ],
               ),
             ),
@@ -329,13 +336,18 @@ class BreastfeedingStatisticsCard extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           if (count > 0)
-            Text(
-              count.toString(),
-              style: const TextStyle(
-                fontSize: 9,
-                fontWeight: FontWeight.w600,
-                color: CupertinoColors.black,
-              ),
+            Builder(
+              builder: (context) {
+                final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+                return Text(
+                  count.toString(),
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w600,
+                    color: themeProvider.getTextColor(context),
+                  ),
+                );
+              },
             ),
           if (count > 0) const SizedBox(height: 2),
           Container(
@@ -351,11 +363,14 @@ class BreastfeedingStatisticsCard extends StatelessWidget {
   }
 
   Widget _buildLegend() {
-    final (periodDays, startDate) = _getPeriodInfo();
-    final totals = _calculateTotals(startDate);
-    final average = totals.$4 / periodDays;
+    return Builder(
+      builder: (context) {
+        final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+        final (periodDays, startDate) = _getPeriodInfo();
+        final totals = _calculateTotals(startDate);
+        final average = totals.$4 / periodDays;
 
-    return Column(
+        return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Wrap(
@@ -364,17 +379,17 @@ class BreastfeedingStatisticsCard extends StatelessWidget {
           children: [
             _buildLegendItem(
               'Ľavé',
-              CupertinoColors.systemPink.withValues(alpha: 0.8),
+              themeProvider.getPrimaryColor().withValues(alpha: 0.9),
               totals.$1,
             ),
             _buildLegendItem(
               'Pravé',
-              CupertinoColors.systemPurple.withValues(alpha: 0.7),
+              themeProvider.getPrimaryColor().withValues(alpha: 0.7),
               totals.$2,
             ),
             _buildLegendItem(
               'Obidve',
-              CupertinoColors.systemIndigo.withValues(alpha: 0.7),
+              themeProvider.getPrimaryColor().withValues(alpha: 0.5),
               totals.$3,
             ),
           ],
@@ -383,15 +398,15 @@ class BreastfeedingStatisticsCard extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: CupertinoColors.systemGrey6,
+            color: themeProvider.getAccentColorLight(),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
             children: [
-              const Icon(
+              Icon(
                 CupertinoIcons.info_circle_fill,
                 size: 16,
-                color: CupertinoColors.systemBlue,
+                color: themeProvider.getPrimaryColor(),
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -407,6 +422,8 @@ class BreastfeedingStatisticsCard extends StatelessWidget {
           ),
         ),
       ],
+    );
+      },
     );
   }
 

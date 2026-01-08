@@ -1,4 +1,6 @@
 import 'package:flutter/cupertino.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 
 /// Widget pre kartu vitamínu D s checkboxom a potvrdením
 class VitaminDCard extends StatefulWidget {
@@ -55,12 +57,14 @@ class _VitaminDCardState extends State<VitaminDCard> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return GestureDetector(
       onTap: _onCheckChanged,
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: CupertinoColors.white,
+          color: themeProvider.getCardColor(context),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -71,41 +75,45 @@ class _VitaminDCardState extends State<VitaminDCard> {
           ],
         ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // Ikonka
             Container(
-              padding: const EdgeInsets.all(12),
+              width: 48,
+              height: 48,
               decoration: BoxDecoration(
                 color: CupertinoColors.systemYellow.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(
-                CupertinoIcons.sun_max_fill,
-                size: 32,
-                color: CupertinoColors.systemYellow,
+              child: const Center(
+                child: Icon(
+                  CupertinoIcons.sun_max_fill,
+                  size: 28,
+                  color: CupertinoColors.systemYellow,
+                ),
               ),
             ),
             const SizedBox(width: 16),
             // Text
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'Vitamín D',
                     style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
                       color: CupertinoColors.systemGrey,
                     ),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
                     '1x denne',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 17,
                       fontWeight: FontWeight.w600,
-                      color: CupertinoColors.black,
+                      color: themeProvider.getTextColor(context),
                     ),
                   ),
                 ],

@@ -1,3 +1,5 @@
+import 'package:uuid/uuid.dart';
+
 class SleepRecord {
   final String id;
   final DateTime startTime;
@@ -5,11 +7,11 @@ class SleepRecord {
   final String? note;
 
   SleepRecord({
-    required this.id,
+    String? id,
     required this.startTime,
     this.endTime,
     this.note,
-  });
+  }) : id = id ?? const Uuid().v4();
 
   Duration? get duration {
     if (endTime == null) return null;

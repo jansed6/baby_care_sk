@@ -1,3 +1,5 @@
+import 'package:uuid/uuid.dart';
+
 class BreastfeedingRecord {
   final String id;
   final DateTime time;
@@ -7,7 +9,7 @@ class BreastfeedingRecord {
     String? id,
     required this.time,
     required this.side,
-  }) : id = id ?? DateTime.now().millisecondsSinceEpoch.toString();
+  }) : id = id ?? const Uuid().v4();
 
   Map<String, dynamic> toJson() {
     return {

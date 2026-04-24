@@ -1,6 +1,6 @@
 # BabyCare SK
 
-![BabyCare SK Logo](docs/images/logo.png)
+![BabyCare SK Logo](BabyCareSkLogo.png)
 
 BabyCare SK is a simple and practical baby-tracking app designed for everyday parenting.  
 It helps families log the most important daily activities in one clear place.

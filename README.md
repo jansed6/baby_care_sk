@@ -43,8 +43,7 @@ BabyCare SK is available exclusively through the Apple App Store.
 
 ## Contact the Developer
 
-- 📧 Email: [your.email@example.com](mailto:your.email@example.com)
-- 💬 Contact form: [Project Contact Form](https://example.com/contact)
+- 📧 Email: [jasned6@gmail.com](mailto:jansed6@gmail.com)
 
 ---
 

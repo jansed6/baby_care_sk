@@ -2,31 +2,33 @@
 <html lang="sk">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>BabyCare SK</title>
+
   <style>
     body {
       margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: #eaf2ec;
       color: #1f2937;
-      text-align: center;
     }
 
     .container {
-      max-width: 900px;
-      margin: 0 auto;
+      max-width: 1100px;
+      margin: auto;
       padding: 60px 20px;
+      text-align: center;
     }
 
-    img.logo {
-      width: 140px;
-      border-radius: 32px;
-      margin-bottom: 24px;
+    /* HERO */
+    .logo {
+      width: 120px;
+      border-radius: 28px;
+      margin-bottom: 20px;
     }
 
     h1 {
-      font-size: 48px;
+      font-size: 56px;
       margin: 0;
     }
 
@@ -34,64 +36,103 @@
       color: #34c759;
     }
 
-    p {
+    .subtitle {
       font-size: 20px;
       color: #6b7280;
-      margin: 20px auto;
+      margin-top: 16px;
       max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
     }
 
-    .features {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 16px;
-      margin-top: 40px;
-    }
-
-    .card {
-      background: white;
-      padding: 24px;
-      border-radius: 24px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.06);
-      font-size: 18px;
+    .cta {
+      margin-top: 30px;
     }
 
     .button {
       display: inline-block;
-      margin-top: 40px;
-      padding: 16px 28px;
-      border-radius: 999px;
+      padding: 16px 32px;
       background: #34c759;
       color: white;
+      border-radius: 999px;
       text-decoration: none;
-      font-weight: 700;
+      font-weight: 600;
+      box-shadow: 0 8px 20px rgba(52,199,89,0.3);
     }
 
+    /* FEATURES */
+    .features {
+      margin-top: 70px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: white;
+      padding: 22px;
+      border-radius: 22px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+      font-size: 18px;
+    }
+
+    /* SCREENSHOTS */
     .screens {
-      margin-top: 50px;
+      margin-top: 80px;
+    }
+
+    .screens h2 {
+      margin-bottom: 30px;
+    }
+
+    .screen-grid {
       display: flex;
       justify-content: center;
-      gap: 24px;
+      gap: 25px;
       flex-wrap: wrap;
     }
 
-    .screens img {
+    .screen-grid img {
       width: 220px;
       border-radius: 32px;
-      box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+      transition: transform 0.2s;
+    }
+
+    .screen-grid img:hover {
+      transform: scale(1.05);
+    }
+
+    /* FOOTER */
+    footer {
+      margin-top: 80px;
+      padding: 30px;
+      font-size: 14px;
+      color: #6b7280;
     }
   </style>
 </head>
+
 <body>
+
   <div class="container">
-    <img class="logo" src="BabyCareSkLogo.png" alt="BabyCare SK logo" />
+
+    <!-- HERO -->
+    <img src="../BabyCareSkLogo.png" class="logo"/>
 
     <h1>BabyCare <span>SK</span></h1>
 
-    <p>Jednoduchá iOS aplikácia na sledovanie denných aktivít bábätka – dojčenie, spánok, plienky, fľaša a vitamín D.</p>
+    <p class="subtitle">
+      Jednoduchá aplikácia na sledovanie denných aktivít bábätka – kŕmenie, spánok, plienky a viac.
+    </p>
 
-    <a class="button" href="https://apps.apple.com/">Stiahnuť v App Store</a>
+    <div class="cta">
+      <a href="https://apps.apple.com/" class="button">
+        Stiahnuť na App Store
+      </a>
+    </div>
 
+    <!-- FEATURES -->
     <div class="features">
       <div class="card">🤱 Dojčenie</div>
       <div class="card">😴 Spánok</div>
@@ -101,11 +142,24 @@
       <div class="card">🌙 Tmavý režim</div>
     </div>
 
+    <!-- SCREENSHOTS -->
     <div class="screens">
-      <img src="screenshots/HomeScreen.png" alt="Home screen" />
-      <img src="screenshots/StatisticsScreen.png" alt="Statistics screen" />
-      <img src="screenshots/SettingsScreen.png" alt="Settings screen" />
+      <h2>Ukážka aplikácie</h2>
+
+      <div class="screen-grid">
+        <img src="../screenshots/HomeScreen.png">
+        <img src="../screenshots/HomeScreenDark.png">
+        <img src="../screenshots/StatisticsScreen.png">
+        <img src="../screenshots/SettingsScreen.png">
+      </div>
     </div>
+
+    <!-- FOOTER -->
+    <footer>
+      © 2026 BabyCareSK • Eduard Janský
+    </footer>
+
   </div>
+
 </body>
 </html>

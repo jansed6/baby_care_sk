@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BabyCare SK</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #eaf2ec;
+      color: #1f2937;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 60px 20px;
+    }
+
+    img.logo {
+      width: 140px;
+      border-radius: 32px;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      font-size: 48px;
+      margin: 0;
+    }
+
+    h1 span {
+      color: #34c759;
+    }
+
+    p {
+      font-size: 20px;
+      color: #6b7280;
+      margin: 20px auto;
+      max-width: 600px;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px;
+      margin-top: 40px;
+    }
+
+    .card {
+      background: white;
+      padding: 24px;
+      border-radius: 24px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+      font-size: 18px;
+    }
+
+    .button {
+      display: inline-block;
+      margin-top: 40px;
+      padding: 16px 28px;
+      border-radius: 999px;
+      background: #34c759;
+      color: white;
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .screens {
+      margin-top: 50px;
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .screens img {
+      width: 220px;
+      border-radius: 32px;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img class="logo" src="BabyCareSkLogo.png" alt="BabyCare SK logo" />
+
+    <h1>BabyCare <span>SK</span></h1>
+
+    <p>Jednoduchá iOS aplikácia na sledovanie denných aktivít bábätka – dojčenie, spánok, plienky, fľaša a vitamín D.</p>
+
+    <a class="button" href="https://apps.apple.com/">Stiahnuť v App Store</a>
+
+    <div class="features">
+      <div class="card">🤱 Dojčenie</div>
+      <div class="card">😴 Spánok</div>
+      <div class="card">🍼 Fľaša</div>
+      <div class="card">👶 Plienky</div>
+      <div class="card">💊 Vitamín D</div>
+      <div class="card">🌙 Tmavý režim</div>
+    </div>
+
+    <div class="screens">
+      <img src="screenshots/HomeScreen.png" alt="Home screen" />
+      <img src="screenshots/StatisticsScreen.png" alt="Statistics screen" />
+      <img src="screenshots/SettingsScreen.png" alt="Settings screen" />
+    </div>
+  </div>
+</body>
+</html>
